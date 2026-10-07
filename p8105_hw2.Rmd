@@ -42,9 +42,34 @@ head(NYC_Transit_Data)
 ```
 The dataset now contains only the columns line, station, name, station latitude / longitude, routes 1-9, entry, vending, entrance type, and ADA compliance. We would still want to combine all the routes into one column "routes served." Line, Station Name, Entrance Type, and Vending are all character variables. Entry and Ada compliance are logical variables. Station Lat/Long is a numerical variable. Routes 1-11 are a mix of number and character variables. This data is not fully tidy yet especially the routes 1-9 variables these should be combined and be character or numerical variables. The dimensions are 1868 X 19 with 19 columns and 1868 obs.
 
+How many distinct stations are there? Note that stations are identified both by name and by line (e.g. 125th St 8th Avenue; 125st Broadway; 125st Lenox); the distinct function may be useful here.
+```{r}
+NYC_Transit_Data |> 
+  distinct(station_name, line) |> 
+  nrow()
+```
 
+Based on the output, there are 465 distinct stations in New York City MTA.
 
+How many stations are ADA compliant?
+```{r}
+NYC_Transit_Data |> 
+  distinct(line, station_name, .keep_all = TRUE) |> 
+  filter(ada_compliance == TRUE) |> 
+  nrow()
+```
+There are 84 stations that are ada_compliant in NYC MTA system. 
 
+What proportion of station entrances / exits without vending allow entrance?
+```{r}
+NYC_Transit_Data |> 
+  filter(vending == "NO") |> 
+  count(entry) |> 
+  mutate(proportion = n / sum(n))
+``` 
+37.77% of station entrances/exits without vending allow entrance
 
+```{r}
 
+```
 
