@@ -1,0 +1,10 @@
+---
+title: "p8105_hw2_nck2132"
+author: "Nina Knitowski"
+date: "2026-10-07"
+output: github_document
+--- 
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
