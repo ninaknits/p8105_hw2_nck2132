@@ -52,7 +52,7 @@ NYC_Transit_Data |>
 Based on the output, there are 465 distinct stations in New York City MTA.
 
 How many stations are ADA compliant?
-```{r}
+```{r ADA_Complaint}
 NYC_Transit_Data |> 
   distinct(line, station_name, .keep_all = TRUE) |> 
   filter(ada_compliance == TRUE) |> 
@@ -61,7 +61,7 @@ NYC_Transit_Data |>
 There are 84 stations that are ada_compliant in NYC MTA system. 
 
 What proportion of station entrances / exits without vending allow entrance?
-```{r}
+```{r Prop}
 NYC_Transit_Data |> 
   filter(vending == "NO") |> 
   count(entry) |> 
@@ -69,7 +69,36 @@ NYC_Transit_Data |>
 ``` 
 37.77% of station entrances/exits without vending allow entrance
 
-```{r}
-
+Tiday Data for Route Name vs. Number
+```{r Convert}
+NYC_Transit_Data_tidy = NYC_Transit_Data |> 
+  mutate(across(starts_with("route"), as.character)) |>
+  pivot_longer( 
+    route1:route11,
+    names_to = "route_number", 
+    values_to = "route_name")
+values_drop_na = TRUE
 ```
 
+Check it worked
+```{r}
+head(NYC_Transit_Data_tidy)
+```
+
+How many distinct stations serve the A train?  compliant?
+```{r}
+NYC_Transit_Data_tidy |>
+  filter(route_name == 'A') |> 
+   distinct(line, station_name) |> 
+  nrow()
+```
+There are 60 distinct stations that service the A train.
+
+Of the stations that serve the A train, how many are ADA compliant
+```{r}
+NYC_Transit_Data_tidy |>
+  filter(route_name == 'A', ada_compliance =="TRUE") |> 
+   distinct(line, station_name) |> 
+  nrow()
+```
+Of those 60 distinct stations that service the A train, 17 are ADA compliant
