@@ -8,3 +8,43 @@ output: github_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+Data SetUp
+
+```{r Data SetUp}
+library(tidyverse)
+NYC_Transit_Data= read_csv(file = "./data/NYC_Transit_Subway_Entrance_And_Exit_Data.csv")
+NYC_Transit_Data = janitor::clean_names(NYC_Transit_Data)
+names(NYC_Transit_Data)
+```
+
+Question 1
+
+Select Only Necessary Columns
+```{r Necessary Columns}
+NYC_Transit_Data <- NYC_Transit_Data |>
+select( 
+line, station_name, station_latitude,station_longitude, starts_with("route"),
+       vending, entry,entrance_type, ada_compliance=ada)
+```
+Convert Entry 
+```{r Convert Entry}
+NYC_Transit_Data = 
+ NYC_Transit_Data |>
+  mutate("entry" = case_match(
+      entry,
+      "YES" ~ TRUE,
+      "NO"  ~ FALSE
+    ))
+```
+Describe Data 
+```{r View}
+head(NYC_Transit_Data)
+```
+The dataset now contains only the columns line, station, name, station latitude / longitude, routes 1-9, entry, vending, entrance type, and ADA compliance. We would still want to combine all the routes into one column "routes served." Line, Station Name, Entrance Type, and Vending are all character variables. Entry and Ada compliance are logical variables. Station Lat/Long is a numerical variable. Routes 1-11 are a mix of number and character variables. This data is not fully tidy yet especially the routes 1-9 variables these should be combined and be character or numerical variables. The dimensions are 1868 X 19 with 19 columns and 1868 obs.
+
+
+
+
+
+
+
