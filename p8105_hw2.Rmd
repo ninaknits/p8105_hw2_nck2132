@@ -179,24 +179,103 @@ The combined dataset called "combined_trash_wheels" and the dataset contains dat
 
 #Question 3
 ```{r Import, Tidy}
-MCI_baseline = 
+MCI_Df=read_csv(
+  "./Data/data_mci/MCI_baseline.csv",
+    skip=1,
+  na = "."
+) |> 
+  janitor::clean_names() |>
+ mutate(
+    sex   = case_match(sex, 0 ~ "female", 1 ~ "male") |> factor(),
+    apoe4 = case_match(apoe4, 0 ~ "non-carrier", 1 ~ "carrier") |> factor()
+  )
+```
+```{r Tidy Dat P2}
+MCI_baseline_df= MCI_Df |>
+  filter(is.na(age_at_onset) | age_at_onset > current_age)
+```
+
+
+```{r Participants Many Develop MCI }
+n_recruit= nrow(MCI_Df)
+n_eligible= nrow(MCI_baseline_df)
+n_develop_mci =
+  MCI_baseline_df |>
+  filter (is.na(age_at_onset) == FALSE) |> 
+  nrow ()
+```
+
+```{r Avg Baseline Age }
+mean_baseline_age =
+  MCI_Df |>
+  summarize (mean_age = mean (current_age)) |> 
+  pull(mean_age)
+```
+
+```{r eligible_summary}
+mci_eligible = MCI_Df |>
+  filter(is.na(age_at_onset) | age_at_onset > current_age)
+
+n_eligible = nrow(mci_eligible)
+
+n_develop_mci = mci_eligible |>
+  filter(!is.na(age_at_onset)) |>
+  nrow()
+
+mean_baseline_age = mci_eligible |>
+  summarize(mean_age = mean(current_age)) |>
+  pull(mean_age)
+
+prop_women_apoe4 = mci_eligible |>
+  filter(sex == "female") |>
+  summarize(prop = mean(apoe4 == "carrier")) |>
+  pull(prop)
+```
+
+I imported the baseline data using `skip = 1` to drop the description row and `na = "."` to code missing values. I then recoded sex and APOE4 carrier status so the values are labeled ("female"/"male" and "carrier"/"non-carrier") instead of 0 and 1. Participants who already had MCI at baseline were removed, leaving `r n_eligible` eligible participants. Of these, `r n_develop_mci` developed MCI during follow-up. The average baseline age was `r round(mean_baseline_age, 2)` years, and `r round(100 * prop_women_apoe4, 1)`% of women in the study were APOE4 carriers.
+
+
+```{r} 
+mci_amyloid_df =
   read_csv(
-    "./Data/data_mci/MCI_baseline.csv",
-  na = c(".", "NA", ""),
-  skip=1)
-  janitor::clean_names(MCI_baseline)
-```
-```{r Tidy Data Pt2}
-MCI_baseline = MCI_baseline |>
+    "./Data/data_mci/mci_amyloid.csv",
+    skip = 1,
+    na = c("NA", "Na")
+  ) |>
+  janitor::clean_names() |>
+  rename(id = study_id) |>
+  pivot_longer(
+    baseline:time_8,
+    names_to = "time",
+    names_prefix = "time_",
+    values_to = "amyloid_ratio"
+  ) |>
   mutate(
-  Sex=replace( Sex, Sex== 0, "female"),
-  Sex = replace(Sex, Sex == 1, "male"),
-  Sex= factor(Sex),
-  apoe4= replace (apoe4, apoe4 == 1, "carrier"), 
-  apoe4= replace (apoe4, apoe4 ==0,"non-carrier"),
-  apoe4= factor(apoe4))
+    time = replace(time, time == "baseline", "0"),
+    time = as.numeric(time)
+  )
+
+print(mci_amyloid_df, n = 12)
 
 ```
 
+# In baseline but not in amyloid
+```{r}
+anti_join(MCI_Df, mci_amyloid_df, by = "id") |>
+  distinct(id)
+```
+# In amyloid but not in baseline
+```{r}
+anti_join(mci_amyloid_df, MCI_Df, by = "id") |>
+  distinct(id)
+```
 
+```{r}
+mci_combined_df=
+  inner_join(MCI_Df, mci_amyloid_df, by = "id")
+
+write_csv(mci_combined_df, "./data//mci_combined.csv")
+```
+
+  
 
