@@ -105,18 +105,76 @@ Of those 60 distinct stations that service the A train, 17 are ADA compliant.
 
 ```{r Data Set Up}
 library(readxl)
-Mr.Trash_df = read_excel("data/202610 Trash Wheel Collection Data.xlsx",
-range = "A2:N741",
-skip = 1,
-na = c(".", "NA", ""),
+Mr.Trash_df = read_excel(
+  path = "data/202610 Trash Wheel Collection Data.xlsx",
+  sheet = "Mr. Trash Wheel",
+  range = "A2:N741",
+  skip = 1,
+  na = c(".", "NA", ""),
 )
 Mr.Trash_df = janitor::clean_names(Mr.Trash_df)
 ```
 ```{r Sports_Ball Convert}
-Mr.Trash_df |>
-  mutate(sports_balls = as.integer(round(sports_balls, digits = 0)))
+Mr.Trash_df = Mr.Trash_df |>
+  mutate(sports_balls = as.integer(round(sports_balls, digits = 0)), 
+         year = as.numeric(year))
  
+mutate(Mr.Trash_df, trash_wheel_type = "Mr. Trash")
+```
+
+```{r Professor Trash Wheel Data}
+Professor_Trash_Wheel_df = read_excel(
+    path = "data/202610 Trash Wheel Collection Data.xlsx",
+  sheet = "Professor Trash Wheel",
+range = "A2:L134",
+skip = 1,
+na = c(".", "NA", ""),
+)
+Professor_Trash_Wheel_df = janitor::clean_names(Professor_Trash_Wheel_df)
+
+Professor_Trash_Wheel_df = Professor_Trash_Wheel_df |>
+mutate(trash_wheel_type = "Professor", 
+       year = as.numeric(year))
+```
+
+```{r Gwynns Falls Data}
+Gwynns_Falls_Trash_Wheel_df = read_excel(
+    path = "data/202610 Trash Wheel Collection Data.xlsx",
+    sheet = 4,
+    range = "A2:K351",
+    skip = 1,
+    na = c(".", "NA", "")
+)
+Gwynns_Falls_Trash_Wheel_df = janitor::clean_names(Gwynns_Falls_Trash_Wheel_df)
+
+Gwynns_Falls_Trash_Wheel_df = mutate(Gwynns_Falls_Trash_Wheel_df,trash_wheel_type = "Gwynns Falls",
+       year = as.numeric(year)
+       )
+```
+
+```{r Combine Tidy Datasets}
+combined_trash_wheels = bind_rows(Mr.Trash_df,Gwynns_Falls_Trash_Wheel_df, Professor_Trash_Wheel_df)
+nrow(combined_trash_wheels)
+```
+```{r Total Weight}
+prof_totalweight=
+  combined_trash_wheels |>
+  filter(trash_wheel_type == "Professor")|>
+  pull(weight_tons) |>
+  sum(na.rm=TRUE)
+prof_totalweight
 ```
 
 
+```{r Total Cigarette Butts }
+gwynnda_2022cig= 
+  combined_trash_wheels|>
+  filter(trash_wheel_type == "Gwynns Falls", month=="June", year== "2022") |>
+  pull(cigarette_butts) |>
+  sum(na.rm=TRUE)
+gwynnda_2022cig
+```
+
+
+The combined dataset called "combined_trash_wheels" and the dataset contains data from "Mr. Trash Wheel", "Professor Trash Wheel", and "Gwynns Falls Trash Wheel." The combined dataset contains `r nrow(combined_trash_wheels)` observations across `r ncol(combined_trash_wheels)` variables. In "Professor Trash Wheel" dataset there were `r prof_totalweight` tons of trash and in "Gwynna Falls Trash Wheel" there were `r gwynnda_2022cig` of total cigarette butts collect. 
 
