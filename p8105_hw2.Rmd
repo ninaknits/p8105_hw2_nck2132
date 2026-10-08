@@ -8,10 +8,11 @@ output: github_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
-Data SetUp
 
+Load Libraries
 ```{r Data SetUp}
 library(tidyverse)
+
 NYC_Transit_Data= read_csv(file = "./data/NYC_Transit_Subway_Entrance_And_Exit_Data.csv")
 NYC_Transit_Data = janitor::clean_names(NYC_Transit_Data)
 names(NYC_Transit_Data)
@@ -40,36 +41,39 @@ Describe Data
 ```{r View}
 head(NYC_Transit_Data)
 ```
-The dataset now contains only the columns line, station, name, station latitude / longitude, routes 1-9, entry, vending, entrance type, and ADA compliance. We would still want to combine all the routes into one column "routes served." Line, Station Name, Entrance Type, and Vending are all character variables. Entry and Ada compliance are logical variables. Station Lat/Long is a numerical variable. Routes 1-11 are a mix of number and character variables. This data is not fully tidy yet especially the routes 1-9 variables these should be combined and be character or numerical variables. The dimensions are 1868 X 19 with 19 columns and 1868 obs.
+The dataset contains variables on NYC MTA station details and their compliance.
+
+For data cleaning, the dataset now contains only the columns `r names(NYC_Transit_Data)`. We would still want to combine all the routes into one column "routes served" to fully tidy the data.`line`, `station_name`, `entrance_type`, and `vending` are character variables. `Entry` and `ada_compliance` are logical variables. `station_lattitude` and `station_longitude` are numerical variables. `route1`, `route2`, `route3`, `route4`, `route4`, `route5`, `route6`, `route7` are character variables and `route8`,`route9`, `route10`, `route11` are numerical variables. This data is not fully tidy yet especially the routes 1-9 variables these should be combined and be the same variable type. The data has `r nrow(NYC_Transit_Data)` rows, `r ncol(NYC_Transit_Data)` columns.
 
 How many distinct stations are there? Note that stations are identified both by name and by line (e.g. 125th St 8th Avenue; 125st Broadway; 125st Lenox); the distinct function may be useful here.
 ```{r}
-NYC_Transit_Data |> 
+n_stations <- NYC_Transit_Data |> 
   distinct(station_name, line) |> 
   nrow()
 ```
 
-Based on the output, there are 465 distinct stations in New York City MTA.
+Based on the output, there are `r n_stations` distinct stations in New York City MTA.
 
 How many stations are ADA compliant?
 ```{r ADA_Complaint}
-NYC_Transit_Data |> 
+n_stations_ada <- NYC_Transit_Data |> 
   distinct(line, station_name, .keep_all = TRUE) |> 
   filter(ada_compliance == TRUE) |> 
   nrow()
 ```
-There are 84 stations that are ada_compliant in NYC MTA system. 
+There are `r n_stations_ada` stations that are ada_compliant in NYC MTA system. 
 
 What proportion of station entrances / exits without vending allow entrance?
 ```{r Prop}
-NYC_Transit_Data |> 
-  filter(vending == "NO") |> 
-  count(entry) |> 
-  mutate(proportion = n / sum(n))
+prop_vending <- NYC_Transit_Data |> 
+   filter(vending == "NO") |> 
+  summarize(proportion = mean(entry == TRUE)) |> 
+  pull(proportion)
 ``` 
-37.77% of station entrances/exits without vending allow entrance
 
-Tiday Data for Route Name vs. Number
+`r round(prop_vending * 100, 1)`% of station entrances/exits without vending allow entrance.
+
+Tidyy Data for Route Name vs. Number
 ```{r Convert}
 NYC_Transit_Data_tidy = NYC_Transit_Data |> 
   mutate(across(starts_with("route"), as.character)) |>
@@ -86,24 +90,25 @@ head(NYC_Transit_Data_tidy)
 ```
 
 ```{r Distinct Stations A Train}
-NYC_Transit_Data_tidy |>
+distinctA_stations <- NYC_Transit_Data_tidy |>
   filter(route_name == 'A') |> 
    distinct(line, station_name) |> 
   nrow()
 ```
-There are 60 distinct stations that service the A train.
+There are `r distinctA_stations` distinct stations that service the A train.
 
 ```{r Prop A Train ADA Compliant}
-NYC_Transit_Data_tidy |>
+propA_compliant <-NYC_Transit_Data_tidy |>
   filter(route_name == 'A', ada_compliance =="TRUE") |> 
    distinct(line, station_name) |> 
   nrow()
 ```
-Of those 60 distinct stations that service the A train, 17 are ADA compliant.
+Of those `r propA_compliant` distinct stations that service the A train, 17 are ADA compliant.
 
 #Question 2 
 
-```{r Data Set Up}
+Load Mr. Trash Wheel 
+```{r Data Setup}
 library(readxl)
 Mr.Trash_df = read_excel(
   path = "data/202610 Trash Wheel Collection Data.xlsx",
@@ -114,20 +119,23 @@ Mr.Trash_df = read_excel(
 )
 Mr.Trash_df = janitor::clean_names(Mr.Trash_df)
 ```
+
+Cleaning Mr. Trash Wheel
 ```{r Sports_Ball Convert}
 Mr.Trash_df = Mr.Trash_df |>
+  filter(!is.na(dumpster)) |>
   mutate(sports_balls = as.integer(round(sports_balls, digits = 0)), 
          year = as.numeric(year))
- 
-mutate(Mr.Trash_df, trash_wheel_type = "Mr. Trash")
+  mutate(Mr.Trash_df, trash_wheel_type = "Mr. Trash")
 ```
 
+Load Professor Trash Wheel Data & Clean
 ```{r Professor Trash Wheel Data}
 Professor_Trash_Wheel_df = read_excel(
     path = "data/202610 Trash Wheel Collection Data.xlsx",
-  sheet = "Professor Trash Wheel",
+    sheet = "Professor Trash Wheel",
 range = "A2:M139",
- col_types = c(
+col_types = c(
     "numeric", "text", "numeric", "date", "numeric", "numeric",
     "numeric", "numeric", "numeric", "numeric", "numeric", "numeric",
     "numeric"
@@ -183,6 +191,7 @@ gwynnda_2022cig
 The combined dataset called "combined_trash_wheels" and the dataset contains data from "Mr. Trash Wheel", "Professor Trash Wheel", and "Gwynns Falls Trash Wheel." The combined dataset contains `r nrow(combined_trash_wheels)` observations across `r ncol(combined_trash_wheels)` variables. In "Professor Trash Wheel" dataset there were `r prof_totalweight` tons of trash and in "Gwynna Falls Trash Wheel" there were `r gwynnda_2022cig` of total cigarette butts collect. 
 
 #Question 3
+Import MCI_baseline & Tidy Data
 ```{r Import, Tidy}
 MCI_Df=read_csv(
   "./Data/data_mci/MCI_baseline.csv",
@@ -196,8 +205,8 @@ MCI_Df=read_csv(
   )
 ```
 
-
-```{r Eligible Summary}
+Cleaning Data P2, Descriptive Data
+```{r Eligible Description}
 mci_eligible = MCI_Df |>
   filter(is.na(age_at_onset) | age_at_onset > current_age)
 
@@ -219,7 +228,7 @@ prop_women_apoe4 = mci_eligible |>
 
 I imported the baseline data using `skip = 1` to drop the description row and `na = "."` to code missing values. I then recoded sex and APOE4 carrier status so the values are labeled ("female"/"male" and "carrier"/"non-carrier") instead of 0 and 1. Participants who already had MCI at baseline were removed, leaving `r n_eligible` eligible participants. Of these, `r n_develop_mci` developed MCI during follow-up. The average baseline age was `r round(mean_baseline_age, 2)` years, and `r round(100 * prop_women_apoe4, 1)`% of women in the study were APOE4 carriers.
 
-
+Data Import MCI_Amyloid and Clean
 ```{r} 
 mci_amyloid_df =
   read_csv(
@@ -243,7 +252,7 @@ mci_amyloid_df =
 print(mci_amyloid_df, n = 12)
 ```
 
-```{r amyloid_summary}
+```{r Amyloid Description}
 n_amyloid_obs = nrow(mci_amyloid_df)
 
 n_amyloid_participants = mci_amyloid_df |>
@@ -261,6 +270,7 @@ amyloid_range = mci_amyloid_df |>
 
 The amyloid file has a description row above the real column names, so I imported it with `skip = 1` and coded both "NA" and "Na" as missing, then cleaned the names and renamed the identifier to `id`. I pivoted the data from wide to long so each row is one participant at one visit, with `time` as numeric years since baseline (0, 2, 4, 6, 8). The tidy dataset has `r n_amyloid_obs` observations from `r n_amyloid_participants` participants, with amyloid ratios ranging from about `r round(pull(amyloid_range, min), 3)` to `r round(pull(amyloid_range, max), 3)`. `r n_amyloid_missing` observations are missing, mostly at follow-up visits, so the data are unbalanced, and the file has 487 participants versus 483 in the baseline file. This means there is a slight mismatch in the datasets
 
+Check if Overlap/Unbalanced
 ```{r check_overlap}
 baseline_only = anti_join(MCI_Df, mci_amyloid_df, by = "id") |>
   distinct(id)
