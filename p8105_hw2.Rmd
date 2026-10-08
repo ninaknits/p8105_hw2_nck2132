@@ -175,6 +175,28 @@ gwynnda_2022cig=
 gwynnda_2022cig
 ```
 
-
 The combined dataset called "combined_trash_wheels" and the dataset contains data from "Mr. Trash Wheel", "Professor Trash Wheel", and "Gwynns Falls Trash Wheel." The combined dataset contains `r nrow(combined_trash_wheels)` observations across `r ncol(combined_trash_wheels)` variables. In "Professor Trash Wheel" dataset there were `r prof_totalweight` tons of trash and in "Gwynna Falls Trash Wheel" there were `r gwynnda_2022cig` of total cigarette butts collect. 
+
+#Question 3
+```{r Import, Tidy}
+MCI_baseline = 
+  read_csv(
+    "./Data/data_mci/MCI_baseline.csv",
+  na = c(".", "NA", ""),
+  skip=1)
+  janitor::clean_names(MCI_baseline)
+```
+```{r Tidy Data Pt2}
+MCI_baseline = MCI_baseline |>
+  mutate(
+  Sex=replace( Sex, Sex== 0, "female"),
+  Sex = replace(Sex, Sex == 1, "male"),
+  Sex= factor(Sex),
+  apoe4= replace (apoe4, apoe4 == 1, "carrier"), 
+  apoe4= replace (apoe4, apoe4 ==0,"non-carrier"),
+  apoe4= factor(apoe4))
+
+```
+
+
 
