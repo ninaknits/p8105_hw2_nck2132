@@ -190,29 +190,9 @@ MCI_Df=read_csv(
     apoe4 = case_match(apoe4, 0 ~ "non-carrier", 1 ~ "carrier") |> factor()
   )
 ```
-```{r Tidy Dat P2}
-MCI_baseline_df= MCI_Df |>
-  filter(is.na(age_at_onset) | age_at_onset > current_age)
-```
 
 
-```{r Participants Many Develop MCI }
-n_recruit= nrow(MCI_Df)
-n_eligible= nrow(MCI_baseline_df)
-n_develop_mci =
-  MCI_baseline_df |>
-  filter (is.na(age_at_onset) == FALSE) |> 
-  nrow ()
-```
-
-```{r Avg Baseline Age }
-mean_baseline_age =
-  MCI_Df |>
-  summarize (mean_age = mean (current_age)) |> 
-  pull(mean_age)
-```
-
-```{r eligible_summary}
+```{r Eligible Summary}
 mci_eligible = MCI_Df |>
   filter(is.na(age_at_onset) | age_at_onset > current_age)
 
@@ -276,27 +256,33 @@ amyloid_range = mci_amyloid_df |>
 
 The amyloid file has a description row above the real column names, so I imported it with `skip = 1` and coded both "NA" and "Na" as missing, then cleaned the names and renamed the identifier to `id`. I pivoted the data from wide to long so each row is one participant at one visit, with `time` as numeric years since baseline (0, 2, 4, 6, 8). The tidy dataset has `r n_amyloid_obs` observations from `r n_amyloid_participants` participants, with amyloid ratios ranging from about `r round(pull(amyloid_range, min), 3)` to `r round(pull(amyloid_range, max), 3)`. `r n_amyloid_missing` observations are missing, mostly at follow-up visits, so the data are unbalanced, and the file has 487 participants versus 483 in the baseline file. This means there is a slight mismatch in the datasets
 
-```{r Baseline, Not Amyloid Beta}
-anti_join(MCI_Df, mci_amyloid_df, by = "id") |>
+```{r check_overlap}
+baseline_only = anti_join(MCI_Df, mci_amyloid_df, by = "id") |>
   distinct(id)
+
+amyloid_only = anti_join(mci_amyloid_df, MCI_Df, by = "id") |>
+  distinct(id)
+
+baseline_only
+amyloid_only
+
+n_baseline_only = nrow(baseline_only)
+n_amyloid_only  = nrow(amyloid_only)
 ```
 
-```{r Amyloid, Not Baseline}
-anti_join(mci_amyloid_df, MCI_Df, by = "id") |>
-  distinct(id)
-```
-
-```{r Combine}
-mci_combined_df=
+```{r combine}
+mci_combined_df =
   inner_join(MCI_Df, mci_amyloid_df, by = "id")
 
-write_csv(mci_combined_df, "./data//mci_combined.csv")
-```
+n_combined = mci_combined_df |>
+  distinct(id) |>
+  nrow()
 
-```{r combined_summary2}
 n_combined_missing = mci_combined_df |>
   filter(is.na(amyloid_ratio)) |>
   nrow()
+
+write_csv(mci_combined_df, "./Data/data_mci/mci_combined.csv")
 ```
 
 `r n_baseline_only` participants appear only in the baseline dataset and `r n_amyloid_only` appear only in the amyloid dataset. The files do not say why, but participants missing from the amyloid data may have been enrolled without a biomarker measurement or withdrawn early, while those missing from the baseline data may lack intake records or come from a different recruitment source, so they have no demographic or APOE4 information. I used an inner join on `id` to keep only the `r n_combined` participants present in both files, which gives one dataset linking baseline characteristics (age, sex, education, APOE4 status, age at MCI onset) to amyloid ratios measured at 0, 2, 4, 6 and 8 years after baseline. The combined dataset has `r nrow(mci_combined_df)` rows, one per participant per visit, and was exported as `mci_combined.csv`. It is not balanced: `r n_combined_missing` amyloid values are still missing because some participants skipped follow-up visits, so this will need to be accounted for in later longitudinal analysis.
