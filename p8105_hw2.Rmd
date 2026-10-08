@@ -17,7 +17,7 @@ NYC_Transit_Data = janitor::clean_names(NYC_Transit_Data)
 names(NYC_Transit_Data)
 ```
 
-Question 1
+#Question 1
 
 Select Only Necessary Columns
 ```{r Necessary Columns}
@@ -85,8 +85,7 @@ Check it worked
 head(NYC_Transit_Data_tidy)
 ```
 
-How many distinct stations serve the A train?  compliant?
-```{r}
+```{r Distinct Stations A Train}
 NYC_Transit_Data_tidy |>
   filter(route_name == 'A') |> 
    distinct(line, station_name) |> 
@@ -94,11 +93,30 @@ NYC_Transit_Data_tidy |>
 ```
 There are 60 distinct stations that service the A train.
 
-Of the stations that serve the A train, how many are ADA compliant
-```{r}
+```{r Prop A Train ADA Compliant}
 NYC_Transit_Data_tidy |>
   filter(route_name == 'A', ada_compliance =="TRUE") |> 
    distinct(line, station_name) |> 
   nrow()
 ```
-Of those 60 distinct stations that service the A train, 17 are ADA compliant
+Of those 60 distinct stations that service the A train, 17 are ADA compliant.
+
+#Question 2 
+
+```{r Data Set Up}
+library(readxl)
+Mr.Trash_df = read_excel("data/202610 Trash Wheel Collection Data.xlsx",
+range = "A2:N741",
+skip = 1,
+na = c(".", "NA", ""),
+)
+Mr.Trash_df = janitor::clean_names(Mr.Trash_df)
+```
+```{r Sports_Ball Convert}
+Mr.Trash_df |>
+  mutate(sports_balls = as.integer(round(sports_balls, digits = 0)))
+ 
+```
+
+
+
