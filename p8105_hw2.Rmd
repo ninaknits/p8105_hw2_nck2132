@@ -108,7 +108,7 @@ library(readxl)
 Mr.Trash_df = read_excel(
   path = "data/202610 Trash Wheel Collection Data.xlsx",
   sheet = "Mr. Trash Wheel",
-  range = "A2:N741",
+  range = "A2:N742",
   skip = 1,
   na = c(".", "NA", ""),
 )
@@ -126,7 +126,12 @@ mutate(Mr.Trash_df, trash_wheel_type = "Mr. Trash")
 Professor_Trash_Wheel_df = read_excel(
     path = "data/202610 Trash Wheel Collection Data.xlsx",
   sheet = "Professor Trash Wheel",
-range = "A2:L134",
+range = "A2:M139",
+ col_types = c(
+    "numeric", "text", "numeric", "date", "numeric", "numeric",
+    "numeric", "numeric", "numeric", "numeric", "numeric", "numeric",
+    "numeric"
+ ),
 skip = 1,
 na = c(".", "NA", ""),
 )
@@ -141,7 +146,7 @@ mutate(trash_wheel_type = "Professor",
 Gwynns_Falls_Trash_Wheel_df = read_excel(
     path = "data/202610 Trash Wheel Collection Data.xlsx",
     sheet = 4,
-    range = "A2:K351",
+    range = "A2:K394",
     skip = 1,
     na = c(".", "NA", "")
 )
